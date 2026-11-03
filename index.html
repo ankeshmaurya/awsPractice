@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f6f7fb">
+  <title>Cloudly | Cloud operations dashboard</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #7d879e;
+      --line: #e8ebf2;
+      --surface: #fff;
+      --canvas: #f6f7fb;
+      --blue: #5267ed;
+      --blue-soft: #eef0ff;
+      --green: #2bb673;
+      --orange: #f19a4a;
+      --shadow: 0 10px 30px rgba(37, 47, 78, .05);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--canvas);
+      font: 14px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button { font: inherit; }
+    .app { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 232px;
+      flex: 0 0 232px;
+      padding: 27px 16px;
+      background: #fff;
+      border-right: 1px solid var(--line);
+    }
+    .brand { display: flex; align-items: center; gap: 10px; padding: 0 13px 35px; font-size: 19px; font-weight: 750; letter-spacing: -.5px; }
+    .brand-mark {
+      display: grid; place-items: center; width: 31px; height: 31px;
+      color: #fff; background: var(--blue); border-radius: 9px;
+      box-shadow: 0 6px 12px rgba(82, 103, 237, .25);
+    }
+    .brand-mark svg { width: 17px; }
+    .nav-label { margin: 0 13px 10px; color: #a2a9ba; font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    .nav { display: grid; gap: 5px; margin-bottom: 30px; }
+    .nav button {
+      display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 13px;
+      color: var(--muted); background: transparent; border: 0; border-radius: 9px; text-align: left; cursor: pointer;
+    }
+    .nav button:hover, .nav button.active { color: var(--blue); background: var(--blue-soft); }
+    .nav svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+    .help-card { margin: 90px 4px 0; padding: 17px; background: #f7f8ff; border: 1px solid #e8eaff; border-radius: 12px; }
+    .help-card strong { display: block; margin-bottom: 5px; font-size: 12px; }
+    .help-card p { margin: 0 0 13px; color: var(--muted); font-size: 11px; }
+    .help-card a { color: var(--blue); font-size: 11px; font-weight: 700; text-decoration: none; }
+
+    main { min-width: 0; flex: 1; padding: 28px 36px 40px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 34px; }
+    .eyebrow { margin: 0 0 3px; color: var(--muted); font-size: 12px; }
+    h1 { margin: 0; font-size: 25px; letter-spacing: -.7px; }
+    .top-actions { display: flex; align-items: center; gap: 18px; }
+    .icon-button { position: relative; display: grid; place-items: center; width: 35px; height: 35px; color: var(--muted); background: transparent; border: 0; cursor: pointer; }
+    .icon-button svg { width: 19px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+    .notification-dot { position: absolute; top: 5px; right: 5px; width: 6px; height: 6px; background: var(--orange); border: 2px solid var(--canvas); border-radius: 50%; }
+    .profile { display: flex; align-items: center; gap: 10px; padding-left: 17px; border-left: 1px solid var(--line); }
+    .avatar { display: grid; place-items: center; width: 34px; height: 34px; color: #fff; background: #7e8bed; border-radius: 50%; font-size: 12px; font-weight: 700; }
+    .profile strong { display: block; font-size: 12px; }
+    .profile small { color: var(--muted); font-size: 10px; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 22px; }
+    .card { background: var(--surface); border: 1px solid #edf0f5; border-radius: 12px; box-shadow: var(--shadow); }
+    .stat { padding: 20px; }
+    .stat-head { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 12px; }
+    .stat-icon { display: grid; place-items: center; width: 30px; height: 30px; color: var(--blue); background: var(--blue-soft); border-radius: 8px; }
+    .stat-icon.green { color: var(--green); background: #eafaf2; }
+    .stat-icon.orange { color: var(--orange); background: #fff4e8; }
+    .stat-icon svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+    .stat-value { display: block; margin: 14px 0 4px; font-size: 24px; letter-spacing: -.7px; }
+    .trend { font-size: 11px; }
+    .trend.up { color: var(--green); }
+    .trend.neutral { color: var(--muted); }
+    .content-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(270px, .75fr); gap: 22px; }
+    .panel { padding: 22px; }
+    .panel-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+    .panel-heading h2 { margin: 0; font-size: 15px; }
+    .panel-heading p { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
+    .select { padding: 7px 10px; color: var(--muted); background: #fff; border: 1px solid var(--line); border-radius: 6px; font-size: 11px; }
+    .chart { position: relative; height: 238px; }
+    .chart-grid { position: absolute; inset: 12px 0 26px; display: flex; flex-direction: column; justify-content: space-between; }
+    .chart-grid span { display: block; border-top: 1px dashed #e6e9f0; }
+    .chart-grid em { position: absolute; right: 0; transform: translateY(-9px); color: #aab1c1; font-size: 10px; font-style: normal; }
+    .chart svg { position: absolute; inset: 12px 0 26px; width: 100%; height: calc(100% - 38px); overflow: visible; }
+    .chart-labels { position: absolute; right: 0; bottom: 0; left: 0; display: flex; justify-content: space-between; color: #aab1c1; font-size: 10px; }
+    .legend { display: flex; gap: 17px; margin-top: 17px; color: var(--muted); font-size: 10px; }
+    .legend span::before { display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; content: ""; }
+    .legend .requests::before { background: var(--blue); }
+    .legend .errors::before { background: #aab5fb; }
+    .health-list { display: grid; gap: 17px; }
+    .health-row { display: flex; align-items: center; gap: 12px; }
+    .service-icon { display: grid; place-items: center; width: 34px; height: 34px; color: var(--blue); background: var(--blue-soft); border-radius: 9px; font-size: 12px; font-weight: 700; }
+    .service-icon.green { color: var(--green); background: #eafaf2; }
+    .service-icon.orange { color: var(--orange); background: #fff4e8; }
+    .service-info { min-width: 0; flex: 1; }
+    .service-info strong { display: block; font-size: 12px; }
+    .service-info small { color: var(--muted); font-size: 10px; }
+    .health-status { color: var(--green); font-size: 10px; font-weight: 700; }
+    .status-dot { display: inline-block; width: 6px; height: 6px; margin-right: 4px; background: currentColor; border-radius: 50%; }
+    .lower-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(270px, .75fr); gap: 22px; margin-top: 22px; }
+    .projects { width: 100%; border-collapse: collapse; }
+    .projects th { padding: 0 10px 12px; color: #a2a9ba; font-size: 10px; font-weight: 600; text-align: left; }
+    .projects td { padding: 14px 10px; border-top: 1px solid #f0f1f5; font-size: 11px; }
+    .project-name { font-weight: 650; }
+    .project-name span { display: block; margin-top: 2px; color: var(--muted); font-size: 10px; font-weight: 400; }
+    .badge { display: inline-block; padding: 4px 8px; border-radius: 20px; font-size: 10px; font-weight: 650; }
+    .badge.live { color: var(--green); background: #eafaf2; }
+    .badge.review { color: var(--orange); background: #fff4e8; }
+    .activity { display: grid; gap: 16px; }
+    .activity-item { display: flex; gap: 10px; }
+    .activity-marker { width: 7px; height: 7px; margin-top: 6px; background: var(--blue); border-radius: 50%; box-shadow: 0 0 0 4px var(--blue-soft); }
+    .activity-item p { margin: 0; font-size: 11px; }
+    .activity-item small { color: var(--muted); font-size: 10px; }
+    @media (max-width: 960px) {
+      .sidebar { width: 72px; flex-basis: 72px; padding-inline: 10px; }
+      .brand { justify-content: center; padding-inline: 0; }
+      .brand > span, .nav-label, .nav button span, .help-card { display: none; }
+      .nav button { justify-content: center; padding: 12px; }
+      main { padding-inline: 22px; }
+    }
+    @media (max-width: 720px) {
+      .stats, .content-grid, .lower-grid { grid-template-columns: 1fr 1fr; }
+      .content-grid > :first-child, .lower-grid > :first-child { grid-column: 1 / -1; }
+      .stats { gap: 12px; }
+      .stat { padding: 15px; }
+      .profile { padding-left: 8px; }
+      .profile > div:last-child { display: none; }
+    }
+    @media (max-width: 480px) {
+      .sidebar { display: none; }
+      main { padding: 22px 15px; }
+      .topbar { margin-bottom: 25px; }
+      .stats, .content-grid, .lower-grid { grid-template-columns: 1fr; }
+      .content-grid > :first-child, .lower-grid > :first-child { grid-column: auto; }
+      .top-actions { gap: 5px; }
+      .projects th:nth-child(3), .projects td:nth-child(3) { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark"><svg viewBox="0 0 24 24"><path d="M12 3 4 7.5v9L12 21l8-4.5v-9L12 3Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="m8 9 4 2.2L16 9M12 11.2V16" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+        <span>cloudly</span>
+      </div>
+      <p class="nav-label">Workspace</p>
+      <nav class="nav" aria-label="Main navigation">
+        <button class="active" type="button"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg><span>Overview</span></button>
+        <button type="button"><svg viewBox="0 0 24 24"><path d="M4 19V5m0 14h16M8 16v-5m4 5V7m4 9v-8"/></svg><span>Analytics</span></button>
+        <button type="button"><svg viewBox="0 0 24 24"><path d="M5 19V7l7-3 7 3v12l-7 3-7-3Z"/><path d="m5 7 7 3 7-3M12 10v12"/></svg><span>Projects</span></button>
+        <button type="button"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="8"/></svg><span>Integrations</span></button>
+      </nav>
+      <p class="nav-label">Manage</p>
+      <nav class="nav" aria-label="Management navigation">
+        <button type="button"><svg viewBox="0 0 24 24"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="m19.4 15 .1.1a2 2 0 0 1-2.8 2.8l-.1-.1a2 2 0 0 0-3.4 1.4v.3a2 2 0 0 1-4 0v-.3a2 2 0 0 0-3.4-1.4l-.1.1A2 2 0 1 1 3 15.1l.1-.1A2 2 0 0 0 1.7 11.6h-.3a2 2 0 0 1 0-4h.3a2 2 0 0 0 1.4-3.4L3 4.1A2 2 0 1 1 5.8 1.3l.1.1a2 2 0 0 0 3.4-1.4v-.3"/></svg><span>Settings</span></button>
+        <button type="button"><svg viewBox="0 0 24 24"><path d="M15 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-3M10 12h11m0 0-4-4m4 4-4 4"/></svg><span>Sign out</span></button>
+      </nav>
+      <div class="help-card"><strong>Need a hand?</strong><p>Our cloud experts are here to help.</p><a href="mailto:hello@cloudly.example">Contact support →</a></div>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <div><p class="eyebrow">Tuesday, November 3, 2026</p><h1>Good afternoon, Alex</h1></div>
+        <div class="top-actions">
+          <button class="icon-button" type="button" aria-label="Notifications"><span class="notification-dot"></span><svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg></button>
+          <div class="profile"><div class="avatar">AM</div><div><strong>Alex Morgan</strong><small>Administrator</small></div></div>
+        </div>
+      </header>
+
+      <section class="stats" aria-label="Key metrics">
+        <article class="card stat"><div class="stat-head"><span>Monthly spend</span><span class="stat-icon orange"><svg viewBox="0 0 24 24"><path d="M12 3v18M17 7.5C16 6.5 14.5 6 12 6c-2.8 0-4.5 1.2-4.5 3s1.5 2.5 4.5 3 4.5 1.2 4.5 3-1.7 3-4.5 3c-2.5 0-4-.5-5-1.5"/></svg></span></div><strong class="stat-value">$12,486</strong><span class="trend up">↑ 8.2% <span class="trend neutral">vs last month</span></span></article>
+        <article class="card stat"><div class="stat-head"><span>Active projects</span><span class="stat-icon"><svg viewBox="0 0 24 24"><path d="M4 7h16v13H4zM8 7V4h8v3M4 11h16"/></svg></span></div><strong class="stat-value">24</strong><span class="trend up">↑ 3 <span class="trend neutral">this month</span></span></article>
+        <article class="card stat"><div class="stat-head"><span>API requests</span><span class="stat-icon green"><svg viewBox="0 0 24 24"><path d="M4 12h4l2-7 4 14 2-7h4"/></svg></span></div><strong class="stat-value">8.4M</strong><span class="trend up">↑ 12.4% <span class="trend neutral">vs last month</span></span></article>
+        <article class="card stat"><div class="stat-head"><span>Uptime</span><span class="stat-icon green"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></span></div><strong class="stat-value">99.98%</strong><span class="trend neutral">Last 30 days</span></article>
+      </section>
+
+      <section class="content-grid">
+        <article class="card panel">
+          <div class="panel-heading"><div><h2>Traffic overview</h2><p>Requests across all environments</p></div><select class="select" aria-label="Time range"><option>Last 7 days</option><option>Last 30 days</option><option>Last 90 days</option></select></div>
+          <div class="chart">
+            <div class="chart-grid"><span><em>400k</em></span><span><em>300k</em></span><span><em>200k</em></span><span><em>100k</em></span><span><em>0</em></span></div>
+            <svg viewBox="0 0 700 190" preserveAspectRatio="none" aria-label="Traffic line chart" role="img">
+              <defs><linearGradient id="area" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#5267ed" stop-opacity=".18"/><stop offset="1" stop-color="#5267ed" stop-opacity="0"/></linearGradient></defs>
+              <path d="M0 152 C35 145 47 125 82 130 S127 104 165 114 S205 144 247 113 S294 85 330 96 S365 111 410 77 S458 88 495 67 S536 49 577 62 S624 30 700 45 V190 H0Z" fill="url(#area)"/>
+              <path d="M0 152 C35 145 47 125 82 130 S127 104 165 114 S205 144 247 113 S294 85 330 96 S365 111 410 77 S458 88 495 67 S536 49 577 62 S624 30 700 45" fill="none" stroke="#5267ed" stroke-linecap="round" stroke-width="2.5"/>
+              <path d="M0 177 C38 172 51 165 82 169 S132 150 165 160 S210 172 247 152 S295 144 330 153 S370 168 410 137 S460 153 495 128 S541 101 577 120 S624 100 700 111" fill="none" stroke="#aab5fb" stroke-linecap="round" stroke-width="2"/>
+            </svg>
+            <div class="chart-labels"><span>Oct 28</span><span>Oct 29</span><span>Oct 30</span><span>Oct 31</span><span>Nov 1</span><span>Nov 2</span><span>Nov 3</span></div>
+          </div>
+          <div class="legend"><span class="requests">Requests</span><span class="errors">Errors</span></div>
+        </article>
+        <article class="card panel">
+          <div class="panel-heading"><div><h2>Service health</h2><p>All systems operational</p></div><span class="health-status"><i class="status-dot"></i>Healthy</span></div>
+          <div class="health-list">
+            <div class="health-row"><div class="service-icon">API</div><div class="service-info"><strong>API Gateway</strong><small>99.99% uptime</small></div><span class="health-status"><i class="status-dot"></i>Live</span></div>
+            <div class="health-row"><div class="service-icon green">DB</div><div class="service-info"><strong>Primary database</strong><small>42ms latency</small></div><span class="health-status"><i class="status-dot"></i>Live</span></div>
+            <div class="health-row"><div class="service-icon orange">CDN</div><div class="service-info"><strong>Edge network</strong><small>18ms latency</small></div><span class="health-status"><i class="status-dot"></i>Live</span></div>
+            <div class="health-row"><div class="service-icon green">Q</div><div class="service-info"><strong>Message queue</strong><small>0 pending jobs</small></div><span class="health-status"><i class="status-dot"></i>Live</span></div>
+          </div>
+        </article>
+      </section>
+
+      <section class="lower-grid">
+        <article class="card panel">
+          <div class="panel-heading"><div><h2>Recent projects</h2><p>Your latest deployments</p></div><a href="#" style="color:var(--blue);font-size:11px;font-weight:650;text-decoration:none">View all →</a></div>
+          <table class="projects"><thead><tr><th>PROJECT</th><th>STATUS</th><th>REGION</th><th>UPDATED</th></tr></thead><tbody>
+            <tr><td class="project-name">Marketing website<span>production / v2.4.1</span></td><td><span class="badge live">Live</span></td><td>us-east-1</td><td>2 min ago</td></tr>
+            <tr><td class="project-name">Mobile API<span>production / v1.8.0</span></td><td><span class="badge live">Live</span></td><td>eu-west-1</td><td>18 min ago</td></tr>
+            <tr><td class="project-name">Analytics worker<span>staging / v0.9.4</span></td><td><span class="badge review">Review</span></td><td>us-west-2</td><td>1 hour ago</td></tr>
+          </tbody></table>
+        </article>
+        <article class="card panel">
+          <div class="panel-heading"><div><h2>Recent activity</h2><p>Latest workspace events</p></div></div>
+          <div class="activity">
+            <div class="activity-item"><i class="activity-marker"></i><div><p><strong>Alex</strong> deployed Mobile API</p><small>18 minutes ago</small></div></div>
+            <div class="activity-item"><i class="activity-marker" style="background:var(--green);box-shadow:0 0 0 4px #eafaf2"></i><div><p>Database backup completed</p><small>42 minutes ago</small></div></div>
+            <div class="activity-item"><i class="activity-marker" style="background:var(--orange);box-shadow:0 0 0 4px #fff4e8"></i><div><p>New team member invited</p><small>2 hours ago</small></div></div>
+          </div>
+        </article>
+      </section>
+    </main>
+  </div>
+  <script>
+    document.querySelectorAll(".nav button").forEach(function (button) {
+      button.addEventListener("click", function () {
+        document.querySelectorAll(".nav button").forEach(function (item) { item.classList.remove("active"); });
+        button.classList.add("active");
+      });
+    });
+  </script>
+</body>
+</html>
